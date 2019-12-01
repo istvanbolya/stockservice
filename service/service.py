@@ -16,10 +16,18 @@ class StockServiceException(BaseException):
 
 class StockService:
 
+    DEFAULT_EVENT_FIELDS = ['transaction_id',
+                            'event_type',
+                            'date',
+                            'store_number',
+                            'item_number',
+                            'value']
+
     def __init__(self):
         self.kafka_client = StockKafkaClient()
         self.db = StockServiceDB()
         self.event = None
+        self.event_fields = self.DEFAULT_EVENT_FIELDS
         self.item_in_db = None
         self.updated_item_count = 0
 
@@ -99,11 +107,23 @@ class StockService:
             item_stock_value -= event_stock_value
         self._update_item(item_stock_value)
 
+    def _check_event_format(self):
+        current_event_fields = self.event.keys()
+        if not current_event_fields:
+            raise StockServiceException('Cannot get event fields!')
+        if list(current_event_fields) != self.event_fields:
+            raise StockServiceException('Event fields are different. Event ID: {}'.format(self.event['transaction_id']))
+
     def process_event(self):
         try:
             self.event = json.loads(self.event)
         except json.decoder.JSONDecodeError:
             logger.warning('Event "{}" is not a valid JSON!'.format(self.event))
+            return
+        try:
+            self._check_event_format()
+        except StockServiceException as exc:
+            logger.warning(exc)
             return
         logger.debug('Processing event: {}'.format(self.event))
         try:
