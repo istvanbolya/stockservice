@@ -16,9 +16,6 @@ class StockServiceException(BaseException):
 
 class StockService:
 
-    # TODO: Remove in final
-    DEFAULT_INPUT_DIR = 'samples'
-
     def __init__(self):
         self.kafka_client = StockKafkaClient()
         self.db = StockServiceDB()
@@ -123,23 +120,6 @@ class StockService:
             return
         self._set_stock_value()
         self.updated_item_count += 1
-
-    # TODO: Remove in final
-    def _get_events_csv(self, filename):
-        filepath = os.path.join(self.DEFAULT_INPUT_DIR, filename)
-        with open(filepath, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file, delimiter=',')
-            row_idx = 0
-            while True:
-                try:
-                    line = next(csv_reader)
-                except StopIteration:
-                    break
-                row_idx += 1
-                self.event = json.dumps({name: value for name, value in line.items()})
-                self.process_event()
-            logger.info('Processed {} lines.'.format(row_idx))
-            logger.info('Updated items in DB: {}'.format(self.updated_item_count))
 
     def get_events(self):
         try:
