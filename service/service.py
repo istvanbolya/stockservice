@@ -107,7 +107,7 @@ class StockService:
             item_stock_value -= event_stock_value
         self._update_item(item_stock_value)
 
-    def _check_event_format(self):
+    def _check_event_fields(self):
         current_event_fields = self.event.keys()
         if not current_event_fields:
             raise StockServiceException('Cannot get event fields!')
@@ -121,7 +121,7 @@ class StockService:
             logger.warning('Event "{}" is not a valid JSON!'.format(self.event))
             return
         try:
-            self._check_event_format()
+            self._check_event_fields()
         except StockServiceException as exc:
             logger.warning(exc)
             return
