@@ -1,4 +1,4 @@
-from importer.base import StockImporter
+from importer.importer import StockImporter
 
 FILENAME_1 = 'csv_all_incoming.csv'
 FILENAME_2 = 'csv_sample_1.csv'

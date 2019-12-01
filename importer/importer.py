@@ -78,4 +78,4 @@ class StockImporter:
     def process_all(self):
         for filename in self.get_files():
             self.filename = filename
-            self._process()
+            self.process()
