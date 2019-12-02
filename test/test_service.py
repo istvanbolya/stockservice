@@ -3,7 +3,7 @@ import testing.postgresql
 import psycopg2
 
 from service.service import StockService, StockServiceException
-from database.database import StockServiceDB
+from database.database import StockServiceDB, StockServiceDBException
 
 
 def init_test_db(postgresql):
@@ -90,6 +90,9 @@ class StockServiceTest(TestCase):
         self.test_service_db.cursor.execute(raw_sql)
         raw_result = self.test_service_db.cursor.fetchone()
         self.assertEqual(raw_result[0], transaction_id)
+        with self.assertRaises(StockServiceDBException) as context:
+            self.service._insert_transaction()
+        self.assertTrue('Insert failed' in str(context.exception))
 
     def test_get_item(self):
         self.service.event = {'transaction_id': 'd2a531fa-a417-4983-ab7d-4bb1411c6250',

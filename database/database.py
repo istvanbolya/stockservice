@@ -23,8 +23,8 @@ class StockServiceDB:
     }
 
     def __init__(self, config=None):
-        self.connection = None
         self.config = config if config else self.DEFAULT_CONFIG
+        self.connection = None
         self.cursor = None
         self.table = None
         self.fields = None

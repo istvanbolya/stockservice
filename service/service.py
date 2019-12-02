@@ -20,17 +20,23 @@ class StockService:
                             'store_number',
                             'item_number',
                             'value']
+    DEFAULT_EVENTS_TABLE = 'events'
+    DEFAULT_STOCK_TABLE = 'stock'
+    DEFAULT_INCOMING_TYPE = 'incoming'
+    DEFAULT_SALE_TYPE = 'sale'
 
     def __init__(self, database=None, kafka_client=None):
         self.kafka_client = kafka_client if kafka_client else StockKafkaClient()
         self.database = database if database else StockServiceDB()
+        self.table_events = self.DEFAULT_EVENTS_TABLE
+        self.table_stock = self.DEFAULT_STOCK_TABLE
         self.event = None
         self.event_fields = self.DEFAULT_EVENT_FIELDS
         self.item_in_db = None
         self.updated_item_count = 0
 
     def _insert_transaction(self):
-        self.database.table = 'events'
+        self.database.table = self.table_events
         self.database.fields = ['transaction_id',
                                 'event_type',
                                 'date',
@@ -46,7 +52,7 @@ class StockService:
         self.database.insert()
 
     def _get_item(self):
-        self.database.table = 'stock'
+        self.database.table = self.table_stock
         self.database.fields = ['item_number',
                                 'store_number',
                                 'current_value',
@@ -58,9 +64,9 @@ class StockService:
         self.item_in_db = self.database.query_result
 
     def _insert_item(self):
-        if self.event['event_type'] != 'incoming':
+        if self.event['event_type'] != self.DEFAULT_INCOMING_TYPE:
             return
-        self.database.table = 'stock'
+        self.database.table = self.table_stock
         self.database.fields = ['item_number',
                                 'store_number',
                                 'current_value',
@@ -73,7 +79,7 @@ class StockService:
         self.database.insert()
 
     def _update_item(self, value):
-        self.database.table = 'stock'
+        self.database.table = self.table_stock
         self.database.fields = ['current_value']
         self.database.values = [value]
         self.database.where = "item_number={} AND store_number={}".format(self.event['item_number'],
@@ -96,9 +102,9 @@ class StockService:
     def _set_stock_value(self):
         item_stock_value = self.item_in_db[2]
         event_stock_value = int(self.event['value'])
-        if self.event['event_type'] == 'incoming':
+        if self.event['event_type'] == self.DEFAULT_INCOMING_TYPE:
             item_stock_value += event_stock_value
-        elif self.event['event_type'] == 'sale':
+        elif self.event['event_type'] == self.DEFAULT_SALE_TYPE:
             if (item_stock_value - event_stock_value) < 0:
                 raise StockServiceException('Cannot run out of stock! Transaction ID: {}'.format(
                     self.event['transaction_id']))

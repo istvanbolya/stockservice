@@ -29,6 +29,7 @@ class StockImporter:
         self.filename = None
         self.input_dir = self.DEFAULT_INPUT_DIR
         self.file_suffix = self.DEFAULT_FILE_SUFFIX
+        self.delimiter = self.DEFAULT_DELIMITER
         self.validator = StockRecordValidator(config=self.DEFAULT_VALIDATOR_CONFIG)
         self.kafka_client = StockKafkaClient()
         self.import_file_path = None
@@ -48,7 +49,7 @@ class StockImporter:
         logger.info('Processing: {}'.format(self.import_file_path))
         validated_lines = 0
         with open(self.import_file_path, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file, delimiter=self.DEFAULT_DELIMITER)
+            csv_reader = csv.DictReader(csv_file, delimiter=self.delimiter)
             row_index = 0
             while True:
                 try:

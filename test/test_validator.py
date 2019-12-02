@@ -6,7 +6,8 @@ from importer.validator import StockRecordValidator, StockValidatorException
 class StockImporterTest(TestCase):
 
     def setUp(self):
-        simple_config = {'transaction_id': '_check_uuid'}
+        simple_config = {'transaction_id': '_check_uuid',
+                         'event_type': ['incoming', 'sale']}
         self.validator = StockRecordValidator(config=simple_config)
 
     def test_check_uuid(self):
@@ -43,7 +44,11 @@ class StockImporterTest(TestCase):
 
     def test_validate(self):
         self.validator.line_length = 1
-        valid_record = {"transaction_id": "7a21e465-3ae3-4546-b2fa-e87812e4018c"}
-        self.assertTrue(self.validator.validate(valid_record))
-        invalid_record = {"transaction_id": "again_not_an_uuid"}
-        self.assertFalse(self.validator.validate(invalid_record))
+        valid_uuid = {"transaction_id": "7a21e465-3ae3-4546-b2fa-e87812e4018c"}
+        self.assertTrue(self.validator.validate(valid_uuid))
+        invalid_uuid = {"transaction_id": "again_not_an_uuid"}
+        self.assertFalse(self.validator.validate(invalid_uuid))
+        valid_list_value = {"event_type": "incoming"}
+        self.assertTrue(self.validator.validate(valid_list_value))
+        invalid_list_value = {"event_type": "broken"}
+        self.assertFalse(self.validator.validate(invalid_list_value))
