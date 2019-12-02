@@ -59,6 +59,24 @@ class StockServiceTest(TestCase):
             self.service._check_event_fields()
         self.assertTrue('Cannot get event fields' in str(context.exception))
 
+    def test_check_json_format(self):
+        self.service.event = '{"transaction_id": "d2a531fa-a417-4983-ab7d-4bb1411c6250", "event_type": "incoming", ' \
+                             '"date": "2019-08-07T05:48:12Z", "store_number": 9, "item_number": 12, "value": "400"}'
+        self.assertIsNone(self.service._check_json_format())
+        self.service.event = {'transaction_id': 'd2a531fa-a417-4983-ab7d-4bb1411c6250',
+                              'event_type': 'incoming',
+                              'date': '2019-08-07T05:48:12Z',
+                              'store_number': 9,
+                              'item_number': 12,
+                              'value': '400'}
+        self.service.event = '<note>That is not a JSON</note>'
+        with self.assertRaises(StockServiceException) as context:
+            self.service._check_json_format()
+        self.assertTrue('Event is not a valid JSON!' in str(context.exception))
+        with self.assertRaises(StockServiceException) as context:
+            self.service._check_json_format()
+        self.assertTrue('Event is not a valid JSON!' in str(context.exception))
+
     def test_insert_transaction(self):
         transaction_id = 'd2a531fa-a417-4983-ab7d-4bb1411c6250'
         self.service.event = {'transaction_id': transaction_id,
@@ -88,6 +106,14 @@ class StockServiceTest(TestCase):
         self.test_service_db.cursor.execute(raw_sql)
         raw_result = self.test_service_db.cursor.fetchone()
         self.assertEqual(raw_result, self.service.item_in_db)
+        self.service.event = {'transaction_id': 'd2a531fa-a417-4983-ab7d-4bb1411c6250',
+                              'event_type': 'incoming',
+                              'date': '2019-08-07T05:48:12Z',
+                              'store_number': 999,
+                              'item_number': 999,
+                              'value': '400'}
+        self.service._get_item()
+        self.assertFalse(self.service.item_in_db)
 
     def test_insert_item(self):
         self.service.event = {'transaction_id': '407f9c78-13a1-4745-a491-84c4bb09468c',

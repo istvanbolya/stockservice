@@ -112,11 +112,17 @@ class StockService:
         if list(current_event_fields) != self.event_fields:
             raise StockServiceException('Event fields are different. Event ID: {}'.format(self.event['transaction_id']))
 
-    def process_event(self):
+    def _check_json_format(self):
         try:
             self.event = json.loads(self.event)
-        except json.decoder.JSONDecodeError:
-            logger.warning('Event "{}" is not a valid JSON!'.format(self.event))
+        except (json.decoder.JSONDecodeError, TypeError, ):
+            raise StockServiceException('Event is not a valid JSON!')
+
+    def process_event(self):
+        try:
+            self._check_json_format()
+        except StockServiceException as exc:
+            logger.warning(exc)
             return
         try:
             self._check_event_fields()
