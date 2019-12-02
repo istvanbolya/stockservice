@@ -40,6 +40,10 @@ Install packages:
 - Production:
 `pip install -r stockservice/requirements/prod.txt`
 
+Initialize database
+
+`python ./stockservice/scripts/init_db.py`
+
 ## Usage
 The application contains two parts:
 - Importer: It grabs all of the CSV files from a specified directory, parses them, validates the records, and sends into a Kafka topic as an event

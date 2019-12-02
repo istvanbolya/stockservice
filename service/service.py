@@ -135,7 +135,7 @@ class StockService:
         except StockServiceException as exc:
             logger.warning(exc)
             return
-        logger.debug('Processing event: {}'.format(self.event))
+        logger.info('Processing event: {}'.format(self.event))
         try:
             self._insert_transaction()
         except StockServiceDBException as exc:
@@ -154,6 +154,7 @@ class StockService:
             logger.error(exc)
             return
         self.updated_item_count += 1
+        logger.info('Event process was success! ID: {}'.format(self.event['transaction_id']))
 
     def get_events(self):
         try:

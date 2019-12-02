@@ -67,6 +67,7 @@ class StockImporter:
                     except StockKafkaClientException as exc:
                         logger.critical(exc)
                         break
+                    logger.info('Record sent: {}'.format(validated_line['transaction_id']))
                 row_index += 1
             self.processed_lines = row_index
             logger.info('Validated {} lines.'.format(validated_lines))
