@@ -15,30 +15,30 @@ class StockServiceDB:
     DEFAULT_DB_PASS = 'postgres'
     DEFAULT_DB_HOST = 'localhost'
     DEFAULT_DB_NAME = 'stockservice'
-    DEFAULT_DB_CONFIG = {
+    DEFAULT_CONFIG = {
         'user': DEFAULT_DB_USER,
         'password': DEFAULT_DB_PASS,
         'host': DEFAULT_DB_HOST,
         'dbname': DEFAULT_DB_NAME
     }
 
-    def __init__(self):
-        self.db_conn = None
-        self.db_config = self.DEFAULT_DB_CONFIG
+    def __init__(self, config=None):
+        self.connection = None
+        self.config = config if config else self.DEFAULT_CONFIG
         self.cursor = None
         self.table = None
         self.fields = None
         self.values = None
         self.where = None
         self.query_result = None
-        self._connect_db()
+        self._connect()
 
-    def _connect_db(self):
+    def _connect(self):
         try:
-            self.db_conn = psycopg2.connect(**self.db_config)
-            self.cursor = self.db_conn.cursor()
+            self.connection = psycopg2.connect(**self.config)
+            self.cursor = self.connection.cursor()
         except psycopg2.OperationalError:
-            raise StockServiceDBException('Cannot connect to database! {}'.format(self.db_config['host']))
+            raise StockServiceDBException('Cannot connect to database! {}'.format(self.config['host']))
 
     def query(self):
         if not self.table:
@@ -64,17 +64,17 @@ class StockServiceDB:
         try:
             self.cursor.execute(insert_sql, self.values)
         except UniqueViolation as exc:
-            self.db_conn.rollback()
+            self.connection.rollback()
             raise StockServiceDBException('Insert failed! {}'.format(exc))
         else:
-            self.db_conn.commit()
+            self.connection.commit()
 
     def update(self):
-        if not self.table:
+        if any([not self.table, not self.where]):
             return
         update_sql = 'UPDATE {} '.format(self.table)
         update_sql += "SET {}='{}' ".format(self.fields[0], self.values[0])
         update_sql += 'WHERE %s' % self.where
         logger.debug(update_sql)
         self.cursor.execute(update_sql, self.values)
-        self.db_conn.commit()
+        self.connection.commit()
